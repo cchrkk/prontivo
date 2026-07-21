@@ -20,12 +20,10 @@ if ! command -v npm &> /dev/null; then
     exit 1
 fi
 
-# Installa dipendenze se node_modules non esiste
-if [ ! -d "node_modules" ]; then
-    echo "  Installazione dipendenze..."
-    npm install
-    echo ""
-fi
+# Installa/aggiorna dipendenze
+echo "  Installazione dipendenze..."
+npm install --no-audit --no-fund
+echo ""
 
 PORT=8080
 

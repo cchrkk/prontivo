@@ -24,12 +24,10 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-:: Installa dipendenze se node_modules non esiste
-if not exist "node_modules" (
-    echo  Installazione dipendenze...
-    call npm install
-    echo.
-)
+:: Installa/aggiorna dipendenze
+echo  Installazione dipendenze...
+call npm install --no-audit --no-fund
+echo.
 
 set PORT=8080
 
