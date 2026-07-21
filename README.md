@@ -30,6 +30,7 @@ La WebUI si apre su `http://localhost:8080`.
 ## Funzionalita
 
 - Generazione PDF via Puppeteer (headless Chromium)
+- Import PDF: legge i metadati embedded nei PDF esportati e ricostruisce il preventivo
 - Database SQLite con CRUD completo
 - Cronologia versioni (Edit History) con ripristino
 - Drag & drop / clipboard per foto prodotti
