@@ -50,6 +50,10 @@
                     <input type="file" accept=".pdf" onchange="importaPDF(event)" class="hidden">
                 </label>
 
+                <button onclick="anteprimaPDF()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 px-5 rounded shadow text-sm transition">
+                    Anteprima
+                </button>
+
                 <button onclick="generaPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded shadow text-sm transition">
                     Scarica PDF
                 </button>
@@ -120,6 +124,22 @@
                     <label class="block text-sm font-semibold text-gray-700">Ragione Sociale</label>
                     <input type="text" id="doc-firma-azienda" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()">
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PER ANTEPRIMA PDF -->
+    <div id="modal-preview" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-2xl flex flex-col" style="width: 90vw; height: 90vh; max-width: 1100px;">
+            <div class="flex justify-between items-center px-5 py-3 border-b">
+                <h3 class="text-lg font-bold text-slate-900">Anteprima PDF</h3>
+                <div class="flex gap-2">
+                    <button onclick="scaricaDaPreview()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 px-4 rounded text-sm shadow">Scarica PDF</button>
+                    <button onclick="chiudiPreviewModal()" class="bg-slate-200 hover:bg-slate-300 px-4 py-1.5 rounded font-medium text-slate-700 text-sm">Chiudi</button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-hidden p-1">
+                <iframe id="preview-iframe" class="w-full h-full border-0"></iframe>
             </div>
         </div>
     </div>
@@ -431,22 +451,28 @@
         function rimuoviRiga(index) { statoApplicazione.articoli.splice(index, 1); salvaInCache(); renderTabella(); }
         function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); }
 
-        async function generaPDF() {
+        let previewBlobUrl = null;
+
+        async function generaPDFBlob() {
             salvaInCache();
+            const payload = JSON.parse(JSON.stringify(statoApplicazione));
+            if (typeof payload.note === 'string') {
+                payload.note = payload.note.split('\n').filter(n => n.trim() !== '');
+            }
+            const response = await fetch('/api/preventivo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error('Errore generazione PDF');
+            return await response.blob();
+        }
+
+        async function generaPDF() {
             const oggettoVal = document.getElementById('doc-oggetto').value || 'preventivo';
             const nomeFilePulito = oggettoVal.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
             try {
-                const payload = JSON.parse(JSON.stringify(statoApplicazione));
-                if (typeof payload.note === 'string') {
-                    payload.note = payload.note.split('\n').filter(n => n.trim() !== '');
-                }
-                const response = await fetch('/api/preventivo', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (!response.ok) throw new Error('Errore generazione PDF');
-                const blob = await response.blob();
+                const blob = await generaPDFBlob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -454,6 +480,34 @@
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(url), 5000);
             } catch(e) { alert('Errore durante la generazione del PDF'); }
+        }
+
+        async function anteprimaPDF() {
+            const btn = event.target;
+            btn.disabled = true; btn.textContent = 'Genero...';
+            try {
+                const blob = await generaPDFBlob();
+                if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl);
+                previewBlobUrl = URL.createObjectURL(blob);
+                document.getElementById('preview-iframe').src = previewBlobUrl;
+                document.getElementById('modal-preview').classList.remove('hidden');
+            } catch(e) { alert('Errore durante la generazione anteprima'); }
+            finally { btn.disabled = false; btn.textContent = 'Anteprima'; }
+        }
+
+        function scaricaDaPreview() {
+            if (!previewBlobUrl) return;
+            const oggettoVal = document.getElementById('doc-oggetto').value || 'preventivo';
+            const nomeFilePulito = oggettoVal.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            const a = document.createElement('a');
+            a.href = previewBlobUrl;
+            a.download = `Preventivo_${nomeFilePulito}.pdf`;
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        function chiudiPreviewModal() {
+            document.getElementById('modal-preview').classList.add('hidden');
+            document.getElementById('preview-iframe').src = '';
         }
 
         async function importaPDF(event) {
