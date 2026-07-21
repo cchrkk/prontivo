@@ -1,4 +1,4 @@
-# Generatore Preventivi
+# Prontivo
 
 WebUI per la generazione di preventivi PDF professionali con database SQLite, cronologia versioni e drag & drop immagini.
 

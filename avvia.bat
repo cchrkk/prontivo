@@ -1,9 +1,9 @@
 @echo off
-title Generatore Preventivi
+title Prontivo
 color 0A
 echo.
 echo  ========================================
-echo   Generatore Preventivi
+echo   Prontivo
 echo  ========================================
 echo.
 
