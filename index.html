@@ -289,7 +289,7 @@
                     const history = await res.json();
                     if(history.length === 0) container.innerHTML = '<p class="p-4 text-gray-400 italic">Nessuna modifica passata registrata.</p>';
                     history.forEach((h, idx) => {
-                        const d = new Date(h.data_salvataggio).toLocaleString('it-IT');
+                        const d = new Date(h.data_salvataggio + 'Z').toLocaleString('it-IT');
                         container.innerHTML += `
                             <div class="flex justify-between items-center py-2.5 hover:bg-slate-50 px-2">
                                 <div>
