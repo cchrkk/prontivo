@@ -4,6 +4,7 @@
 
 WebUI per la generazione di preventivi PDF professionali con database SQLite, cronologia versioni e drag & drop immagini.
 
+[![Proudly Vibe Coded - Neon Flame](https://vibecoded.fyi/badges/flat/main/proudly-vibe-coded-neon-flame.svg)](https://vibecoded.fyi/)
 ## Setup
 
 ```bash
