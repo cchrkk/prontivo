@@ -26,7 +26,8 @@ if %ERRORLEVEL% neq 0 (
 
 :: Installa/aggiorna dipendenze
 echo  Installazione dipendenze...
-call npm install --no-audit --no-fund
+call npm install --no-audit --no-fund >nul 2>nul
+title Prontivo
 echo.
 
 set PORT=8080
