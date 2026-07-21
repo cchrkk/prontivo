@@ -1,0 +1,20 @@
+{
+  "name": "preventivi-pro",
+  "version": "2026.7.1",
+  "description": "WebUI per generazione preventivi PDF con SQLite, edit history e export",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["preventivi", "pdf", "quotation", "estimate"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^5.2.1",
+    "multer": "^2.2.0",
+    "puppeteer": "^25.3.0",
+    "sqlite3": "^6.0.1"
+  }
+}

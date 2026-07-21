@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <title>Generatore Preventivi</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+    <style>
+        .dropzone.dragover { background-color: #dbeafe; border-color: #2563eb; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans min-h-screen pb-12">
+
+    <div class="max-w-6xl mx-auto px-4 mt-8">
+        <!-- HEADER APPLICAZIONE -->
+        <header class="bg-slate-900 text-white p-6 rounded-t-lg shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-4">
+                <div id="ui-logo-container">
+                    <h1 class="text-2xl font-bold tracking-tight">Preventivi</h1>
+                </div>
+                <p class="text-sm text-slate-400 border-l border-slate-700 pl-4 hidden md:block">Database & History Pro</p>
+            </div>
+            
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Selettore Preventivi da DB -->
+                <select id="selettore-db" onchange="caricaDaDB(this.value)" class="bg-slate-800 text-white text-sm rounded border border-slate-700 p-2 max-w-xs focus:outline-none">
+                    <option value="">-- Carica da Database --</option>
+                </select>
+
+                <button onclick="eliminaPreventivo()" class="bg-red-700 hover:bg-red-600 text-white font-semibold py-2 px-3 rounded text-sm transition" title="Elimina preventivo selezionato">
+                    🗑️
+                </button>
+
+                <!-- Bottone Edit History -->
+                <button onclick="mostraHistoryModal()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 px-3 rounded text-sm transition">
+                    📜 History
+                </button>
+
+                <button onclick="nuovoPreventivo()" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-3 rounded text-sm transition">
+                    + Nuovo
+                </button>
+
+                <button onclick="salvaSuDB()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded shadow text-sm transition">
+                    💾 Salva nel DB
+                </button>
+
+                <label class="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded shadow text-sm transition cursor-pointer">
+                    📥 Importa PDF
+                    <input type="file" accept=".pdf" onchange="importaPDF(event)" class="hidden">
+                </label>
+
+                <button onclick="generaPDF()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2 px-5 rounded shadow text-sm transition">
+                    Scarica PDF
+                </button>
+            </div>
+        </header>
+
+        <div class="bg-white p-6 rounded-b-lg shadow-md space-y-6">
+            <!-- SCHEDA INFO GENERALI -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Data Documento</label>
+                    <input type="text" id="doc-data" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Oggetto / Riferimento (Determina l'ID del file)</label>
+                    <input type="text" id="doc-oggetto" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700">Testo di Introduzione</label>
+                <textarea id="doc-intro" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()"></textarea>
+            </div>
+
+            <!-- TABELLA ARTICOLI -->
+            <div>
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-lg font-bold text-slate-800">Articoli in Offerta</h3>
+                    <button onclick="aggiungiRiga()" class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-1.5 px-4 rounded shadow">
+                        + Aggiungi Articolo
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-200" id="tabella-articoli">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 5%">Ordina</th>
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 10%">Categoria</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 12%">Foto</th>
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 20%">Titolo / Prodotto</th>
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 22%">Descrizione</th>
+                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 7%">Listino (€)</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 7%">Sconto</th>
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 8%">Conf.</th>
+                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 7%">Netto (€)</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 4%">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white" id="container-righe"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NOTE -->
+            <div>
+                <h3 class="text-md font-bold text-slate-800 mb-2">Note e Condizioni (una per riga)</h3>
+                <textarea id="doc-note" rows="3" class="block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()"></textarea>
+            </div>
+
+            <!-- FIRMA -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Nome del Firmatario</label>
+                    <input type="text" id="doc-firma-nome" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Ragione Sociale</label>
+                    <input type="text" id="doc-firma-azienda" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="salvaInCache()">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PER EDIT HISTORY -->
+    <div id="modal-history" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-900">Cronologia Versioni (Edit History)</h3>
+                <button onclick="chiudiHistoryModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            </div>
+            <div id="lista-cronologia" class="divide-y max-h-60 overflow-y-auto pr-1 text-sm">
+                <!-- Voci cronologia via JS -->
+            </div>
+            <div class="text-right">
+                <button onclick="chiudiHistoryModal()" class="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded font-medium text-slate-700">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dataAttuale() {
+            const mesi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+            const oggi = new Date();
+            return `${oggi.getDate()} ${mesi[oggi.getMonth()]} ${oggi.getFullYear()}`;
+        }
+
+        let datiDefault = {
+            id: "",
+            data: dataAttuale(),
+            oggetto: "",
+            testo_intro: "",
+            note: "",
+            firma_nome: "",
+            firma_azienda: "",
+            articoli: []
+        };
+
+        let statoApplicazione = {};
+
+        async function caricaConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    datiDefault.oggetto = cfg.default_object;
+                    datiDefault.testo_intro = cfg.default_intro;
+                    datiDefault.note = cfg.default_notes.join('\n');
+                    datiDefault.firma_nome = cfg.company_person;
+                    datiDefault.firma_azienda = cfg.company_name;
+                }
+            } catch(e) { console.warn("Config non caricata, uso fallback"); }
+        }
+
+        function inizializzaDati(datiDaCaricare = null) {
+            if (datiDaCaricare) {
+                statoApplicazione = datiDaCaricare;
+            } else {
+                const cache = localStorage.getItem('preventivo_cache');
+                if (cache) {
+                    try { statoApplicazione = JSON.parse(cache); } catch(e) { statoApplicazione = JSON.parse(JSON.stringify(datiDefault)); }
+                } else {
+                    statoApplicazione = JSON.parse(JSON.stringify(datiDefault));
+                }
+            }
+
+            document.getElementById('doc-data').value = statoApplicazione.data || '';
+            document.getElementById('doc-oggetto').value = statoApplicazione.oggetto || '';
+            document.getElementById('doc-intro').value = statoApplicazione.testo_intro || '';
+            document.getElementById('doc-note').value = statoApplicazione.note || '';
+            document.getElementById('doc-firma-nome').value = statoApplicazione.firma_nome || '';
+            document.getElementById('doc-firma-azienda').value = statoApplicazione.firma_azienda || '';
+
+            renderTabella();
+            aggiornaSelettoreDB();
+        }
+
+        function salvaInCache() {
+            statoApplicazione.data = document.getElementById('doc-data').value;
+            statoApplicazione.oggetto = document.getElementById('doc-oggetto').value;
+            statoApplicazione.testo_intro = document.getElementById('doc-intro').value;
+            statoApplicazione.note = document.getElementById('doc-note').value;
+            statoApplicazione.firma_nome = document.getElementById('doc-firma-nome').value;
+            statoApplicazione.firma_azienda = document.getElementById('doc-firma-azienda').value;
+            localStorage.setItem('preventivo_cache', JSON.stringify(statoApplicazione));
+        }
+
+        async function aggiornaSelettoreDB() {
+            try {
+                const res = await fetch('/api/preventivi');
+                if (res.ok) {
+                    const preventivi = await res.json();
+                    const select = document.getElementById('selettore-db');
+                    select.innerHTML = '<option value="">-- Carica da Database --</option>';
+                    preventivi.forEach(p => {
+                        const selected = statoApplicazione.id === p.id ? 'selected' : '';
+                        select.innerHTML += `<option value="${p.id}" ${selected}>${p.oggetto} (${p.data_doc})</option>`;
+                    });
+                }
+            } catch (e) { console.error("Errore aggiornamento lista DB", e); }
+        }
+
+        async function salvaSuDB() {
+            salvaInCache();
+            if(!statoApplicazione.oggetto.trim()) {
+                alert("Inserisci un oggetto prima di salvare!");
+                return;
+            }
+            try {
+                const res = await fetch('/api/preventivi/salva', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(statoApplicazione)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    statoApplicazione.id = data.id;
+                    localStorage.setItem('preventivo_cache', JSON.stringify(statoApplicazione));
+                    aggiornaSelettoreDB();
+                    alert("✅ Preventivo archiviato con successo nel database!");
+                }
+            } catch(e) { alert("Errore durante il salvataggio sul DB server."); }
+        }
+
+        async function caricaDaDB(id) {
+            if (!id) return;
+            try {
+                const res = await fetch(`/api/preventivi/${id}`);
+                if (res.ok) {
+                    const dati = await res.json();
+                    inizializzaDati(dati);
+                }
+            } catch(e) { alert("Impossibile caricare il preventivo."); }
+        }
+
+        async function mostraHistoryModal() {
+            if (!statoApplicazione.id) {
+                alert("Salva prima questo preventivo nel DB per vederne la cronologia.");
+                return;
+            }
+            try {
+                const res = await fetch(`/api/preventivi/${statoApplicazione.id}/history`);
+                const container = document.getElementById('lista-cronologia');
+                container.innerHTML = '';
+                
+                if (res.ok) {
+                    const history = await res.json();
+                    if(history.length === 0) container.innerHTML = '<p class="p-4 text-gray-400 italic">Nessuna modifica passata registrata.</p>';
+                    history.forEach((h, idx) => {
+                        const d = new Date(h.data_salvataggio).toLocaleString('it-IT');
+                        container.innerHTML += `
+                            <div class="flex justify-between items-center py-2.5 hover:bg-slate-50 px-2">
+                                <div>
+                                    <span class="font-medium text-slate-800">Versione #${history.length - idx}</span>
+                                    <div class="text-xs text-gray-500">${d}</div>
+                                </div>
+                                <div class="flex gap-1">
+                                    <button onclick="caricaVersioneStorica(${h.id})" class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold py-1 px-2.5 rounded shadow">Ripristina</button>
+                                    <button onclick="eliminaVersione(${h.id})" class="text-xs bg-red-600 hover:bg-red-500 text-white font-bold py-1 px-2 rounded shadow">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('modal-history').classList.remove('hidden');
+                }
+            } catch(e) { alert("Errore nel recupero della cronologia."); }
+        }
+
+        async function caricaVersioneStorica(historyId) {
+            if(!confirm("Vuoi sovrascrivere lo stato attuale con questa versione storica?")) return;
+            try {
+                const res = await fetch(`/api/history/${historyId}`);
+                if (res.ok) {
+                    const dati = await res.json();
+                    inizializzaDati(dati);
+                    chiudiHistoryModal();
+                    alert("🔄 Versione ripristinata correttamente!");
+                }
+            } catch(e) { alert("Errore nel caricamento della versione storica."); }
+        }
+
+        function chiudiHistoryModal() { document.getElementById('modal-history').classList.add('hidden'); }
+        function nuovoPreventivo() {
+            if(confirm("Vuoi ripulire la pagina per creare un nuovo preventivo?")) {
+                inizializzaDati(JSON.parse(JSON.stringify(datiDefault)));
+                localStorage.removeItem('preventivo_cache');
+            }
+        }
+
+        async function eliminaPreventivo() {
+            if (!statoApplicazione.id) { alert("Nessun preventivo selezionato dal DB."); return; }
+            if (!confirm(`Vuoi eliminare definitivamente "${statoApplicazione.oggetto}" e tutte le sue versioni?`)) return;
+            try {
+                const res = await fetch(`/api/preventivi/${statoApplicazione.id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    inizializzaDati(JSON.parse(JSON.stringify(datiDefault)));
+                    localStorage.removeItem('preventivo_cache');
+                    aggiornaSelettoreDB();
+                    alert("🗑️ Preventivo eliminato.");
+                }
+            } catch(e) { alert("Errore nell'eliminazione."); }
+        }
+
+        async function eliminaVersione(historyId) {
+            if (!confirm("Eliminare questa versione dalla cronologia?")) return;
+            try {
+                const res = await fetch(`/api/history/${historyId}`, { method: 'DELETE' });
+                if (res.ok) {
+                    mostraHistoryModal();
+                    alert("🗑️ Versione eliminata.");
+                }
+            } catch(e) { alert("Errore nell'eliminazione della versione."); }
+        }
+
+        async function caricaLogoInUI() {
+            try {
+                const res = await fetch('/api/logo-ui');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" class="max-h-12 w-auto object-contain bg-white p-1 rounded" alt="Logo">`;
+                }
+            } catch (e) {}
+        }
+
+        function renderTabella() {
+            const container = document.getElementById('container-righe');
+            container.innerHTML = '';
+            if (!statoApplicazione.articoli) return;
+
+            const coloriCategoria = ['bg-blue-100 text-blue-800', 'bg-amber-100 text-amber-800', 'bg-emerald-100 text-emerald-800', 'bg-purple-100 text-purple-800', 'bg-rose-100 text-rose-800', 'bg-cyan-100 text-cyan-800'];
+            const categorieUniche = [...new Set(statoApplicazione.articoli.map(a => (a.tipo || '').trim().toLowerCase()).filter(Boolean))];
+            const mappaColore = {};
+            categorieUniche.forEach((c, i) => { mappaColore[c] = coloriCategoria[i % coloriCategoria.length]; });
+
+            statoApplicazione.articoli.forEach((art, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50";
+                const catKey = (art.tipo || '').trim().toLowerCase();
+                const badgeClass = mappaColore[catKey] || 'bg-gray-100 text-gray-800';
+                
+                let dropzoneContent = `<span class="text-[10px] text-gray-400 font-medium text-center">Trascina/Incolla</span>`;
+                if(art.foto) {
+                    dropzoneContent = `
+                        <div class="relative inline-block w-12 h-12">
+                            <img src="${art.foto}" class="w-12 h-12 object-contain border rounded" />
+                            <button onclick="rimuoviFoto(${index}, event)" class="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center shadow">✕</button>
+                        </div>
+                    `;
+                }
+
+                const disabilitaSu = index === 0 ? 'opacity-30 cursor-not-allowed' : '';
+                const disabilitaGiu = index === statoApplicazione.articoli.length - 1 ? 'opacity-30 cursor-not-allowed' : '';
+
+                tr.innerHTML = `
+                    <td class="px-2 py-2 text-center whitespace-nowrap">
+                        <div class="flex flex-col items-center justify-center space-y-0.5">
+                            <button onclick="spostaRiga(${index}, -1)" ${index === 0 ? 'disabled' : ''} class="text-gray-500 hover:text-blue-600 text-sm font-bold bg-gray-100 px-1.5 rounded shadow-sm ${disabilitaSu}">▲</button>
+                            <button onclick="spostaRiga(${index}, 1)" ${index === statoApplicazione.articoli.length - 1 ? 'disabled' : ''} class="text-gray-500 hover:text-blue-600 text-sm font-bold bg-gray-100 px-1.5 rounded shadow-sm ${disabilitaGiu}">▼</button>
+                        </div>
+                    </td>
+                    <td class="px-2 py-2">
+                        <input type="text" value="${art.tipo || ''}" placeholder="es. macchina" onchange="aggiornaDato(${index}, 'tipo', this.value)" class="w-full text-xs font-semibold p-1 border border-gray-200 rounded capitalize">
+                    </td>
+                    <td class="px-2 py-2 text-center">
+                        <div id="dz-${index}" contenteditable="true" class="dropzone border-2 border-dashed border-gray-200 rounded p-1 min-h-[50px] flex items-center justify-center cursor-pointer overflow-hidden focus:outline-none focus:border-blue-500" ondragover="handleDragOver(event, ${index})" ondragleave="handleDragLeave(event, ${index})" ondrop="handleDrop(event, ${index})" onpaste="handlePaste(event, ${index})">
+                            ${dropzoneContent}
+                        </div>
+                    </td>
+                    <td class="px-2 py-2"><input type="text" value="${art.titolo || ''}" onchange="aggiornaDato(${index}, 'titolo', this.value)" class="w-full text-sm p-1 border border-gray-200 rounded"></td>
+                    <td class="px-2 py-2"><textarea rows="2" onchange="aggiornaDato(${index}, 'descrizione', this.value)" class="w-full text-sm p-1 border border-gray-200 rounded block resize-y">${art.descrizione || ''}</textarea></td>
+                    <td class="px-2 py-2"><input type="text" value="${art.listino || ''}" class="text-right w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'listino', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" value="${art.sconto || ''}" class="text-center w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'sconto', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" value="${art.confezione || ''}" placeholder="es. 150 pz" class="w-full text-xs p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'confezione', this.value)"></td>
+                    <td class="px-2 py-2"><input type="text" value="${art.scontato || ''}" class="text-right font-medium text-emerald-700 w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'scontato', this.value)"></td>
+                    <td class="px-4 py-2 text-center"><button onclick="rimuoviRiga(${index})" class="text-red-600 hover:text-red-900 font-bold text-sm">✕</button></td>
+                `;
+                container.appendChild(tr);
+            });
+        }
+
+        function spostaRiga(index, direzione) {
+            const nuovaPosizione = index + direzione;
+            if (nuovaPosizione < 0 || nuovaPosizione >= statoApplicazione.articoli.length) return;
+            const elemento = statoApplicazione.articoli.splice(index, 1)[0];
+            statoApplicazione.articoli.splice(nuovaPosizione, 0, elemento);
+            salvaInCache(); renderTabella();
+        }
+        function handleDragOver(e, index) { e.preventDefault(); document.getElementById(`dz-${index}`).classList.add('dragover'); }
+        function handleDragLeave(e, index) { document.getElementById(`dz-${index}`).classList.remove('dragover'); }
+        function handleDrop(e, index) {
+            e.preventDefault(); document.getElementById(`dz-${index}`).classList.remove('dragover');
+            const file = e.dataTransfer.files[0]; if (file && file.type.startsWith('image/')) leggiImmagine(file, index);
+        }
+        function handlePaste(e, index) {
+            e.preventDefault(); const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) { if (items[i].type.indexOf('image') !== -1) { leggiImmagine(items[i].getAsFile(), index); break; } }
+        }
+        function leggiImmagine(file, index) {
+            const reader = new FileReader();
+            reader.onload = function(event) { statoApplicazione.articoli[index].foto = event.target.result; salvaInCache(); renderTabella(); };
+            reader.readAsDataURL(file);
+        }
+        function rimuoviFoto(index, event) { event.stopPropagation(); statoApplicazione.articoli[index].foto = null; salvaInCache(); renderTabella(); }
+        function aggiungiRiga() {
+            if (!statoApplicazione.articoli) statoApplicazione.articoli = [];
+            statoApplicazione.articoli.push({ tipo: '', foto: null, titolo: '', descrizione: '', confezione: '', listino: '', sconto: '', scontato: '0,00' });
+            salvaInCache(); renderTabella();
+        }
+        function rimuoviRiga(index) { statoApplicazione.articoli.splice(index, 1); salvaInCache(); renderTabella(); }
+        function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); }
+
+        async function generaPDF() {
+            salvaInCache();
+            const oggettoVal = document.getElementById('doc-oggetto').value || 'preventivo';
+            const nomeFilePulito = oggettoVal.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+            try {
+                const payload = JSON.parse(JSON.stringify(statoApplicazione));
+                if (typeof payload.note === 'string') {
+                    payload.note = payload.note.split('\n').filter(n => n.trim() !== '');
+                }
+                const response = await fetch('/api/preventivo', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error('Errore generazione PDF');
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Preventivo_${nomeFilePulito}.pdf`;
+                document.body.appendChild(a); a.click(); a.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 5000);
+            } catch(e) { alert('Errore durante la generazione del PDF'); }
+        }
+
+        async function importaPDF(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            event.target.value = '';
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    fullText += content.items.map(item => item.str).join(' ') + '\n';
+                }
+
+                const match = fullText.match(/PREVENTIVO_JSON_START\s*([\s\S]*?)\s*PREVENTIVO_JSON_END/);
+                if (!match) {
+                    alert('Questo PDF non contiene dati importabili.\nSolo i PDF generati da questo tool possono essere importati.');
+                    return;
+                }
+
+                const dati = JSON.parse(match[1]);
+                if (!confirm(`Vuoi caricare "${dati.oggetto || 'senza titolo'}"?\nLo stato attuale verra sovrascritto.`)) return;
+                inizializzaDati(dati);
+                alert('PDF importato con successo!');
+            } catch(e) {
+                console.error('Errore import PDF:', e);
+                alert('Errore durante l\'importazione del PDF:\n' + e.message);
+            }
+        }
+
+        (async () => {
+            await caricaConfig();
+            inizializzaDati();
+            caricaLogoInUI();
+        })();
+    </script>
+</body>
+</html>

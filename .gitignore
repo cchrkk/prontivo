@@ -1,0 +1,5 @@
+node_modules/
+preventivi.db
+.env
+logo.png
+*.pdf
