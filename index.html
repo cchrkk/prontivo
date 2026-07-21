@@ -476,7 +476,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `Preventivo_${nomeFilePulito}.pdf`;
+                a.download = `${nomeFilePulito}.pdf`;
                 document.body.appendChild(a); a.click(); a.remove();
                 setTimeout(() => URL.revokeObjectURL(url), 5000);
             } catch(e) { alert('Errore durante la generazione del PDF'); }
@@ -501,7 +501,7 @@
             const nomeFilePulito = oggettoVal.trim().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
             const a = document.createElement('a');
             a.href = previewBlobUrl;
-            a.download = `Preventivo_${nomeFilePulito}.pdf`;
+            a.download = `${nomeFilePulito}.pdf`;
             document.body.appendChild(a); a.click(); a.remove();
         }
 
