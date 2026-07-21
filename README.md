@@ -1,4 +1,6 @@
-# Prontivo
+<p align="center"><img src="prontivo.svg" width="120" alt="Prontivo"></p>
+
+<h1 align="center">Prontivo</h1>
 
 WebUI per la generazione di preventivi PDF professionali con database SQLite, cronologia versioni e drag & drop immagini.
 
