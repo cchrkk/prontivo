@@ -360,7 +360,7 @@
                 const res = await fetch('/api/logo-ui');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" class="max-h-12 w-auto object-contain bg-white p-1 rounded" alt="Logo">`;
+                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" class="max-h-12 w-auto object-contain bg-white p-1 rounded" alt="Logo"><h1 class="text-2xl font-bold tracking-tight">Prontivo</h1>`;
                 }
             } catch (e) {}
         }
