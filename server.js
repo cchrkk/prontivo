@@ -379,7 +379,7 @@ function generaHtmlDinamico(dati, logoBase64) {
                 <span class="company-name">${dati.firma_azienda}</span>
             </div>
         </div>
-        <div style="position:absolute; left:0; top:0; font-size:0.5pt; color:transparent; opacity:0; pointer-events:none;">
+        <div style="position:absolute; left:0; top:0; font-size:0.5pt; color:rgba(0,0,0,0.01); pointer-events:none; user-select:none;">
 PREVENTIVO_JSON_START
 ${JSON.stringify(dati)}
 PREVENTIVO_JSON_END
