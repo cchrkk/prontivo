@@ -148,10 +148,20 @@
                     </table>
                 </div>
                 <div class="flex items-center justify-between mt-3">
-                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-                        <input type="checkbox" id="mostra-totale" onchange="toggleTotale()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        Mostra totale nel PDF
-                    </label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="mostra-totale" onchange="toggleTotale()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Mostra totale nel PDF
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="nascondi-listino" onchange="toggleNascondiListino()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Nascondi listino nel PDF
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="nascondi-sconto" onchange="toggleNascondiSconto()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Nascondi sconto nel PDF
+                        </label>
+                    </div>
                     <div id="totale-display" class="hidden text-lg font-bold text-emerald-700">Totale: € <span id="totale-valore">0,00</span></div>
                 </div>
             </div>
@@ -238,19 +248,19 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700">Quantità</label>
-                    <input type="number" id="row-quantita" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaRowEdit()">
+                    <input type="number" id="row-quantita" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaSubtotaleRowEdit()">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700">Listino (€)</label>
-                    <input type="text" id="row-listino" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                    <input type="text" id="row-listino" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="calcolaNettoRowEdit()">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700">Sconto (%)</label>
-                    <input type="number" id="row-sconto" step="0.1" min="0" max="100" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                    <input type="number" id="row-sconto" step="0.1" min="0" max="100" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="calcolaNettoRowEdit()">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700">Prezzo Netto (€)</label>
-                    <input type="text" id="row-scontato" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right font-bold text-emerald-700" oninput="aggiornaRowEdit()">
+                    <input type="text" id="row-scontato" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right font-bold text-emerald-700" oninput="aggiornaSubtotaleRowEdit()">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700">Subtotale (€)</label>
@@ -379,6 +389,8 @@
 
             const mostraTotale = !!statoApplicazione.mostra_totale;
             document.getElementById('mostra-totale').checked = mostraTotale;
+            document.getElementById('nascondi-listino').checked = !!statoApplicazione.nascondi_listino;
+            document.getElementById('nascondi-sconto').checked = !!statoApplicazione.nascondi_sconto;
             document.getElementById('totale-display').classList.toggle('hidden', !mostraTotale);
             calcolaTotale();
 
@@ -551,7 +563,7 @@
             document.getElementById('row-profondita').value = art.profondita || '';
             document.getElementById('row-altezza').value = art.altezza || '';
             renderRowFotoPreview();
-            aggiornaRowEdit();
+            aggiornaSubtotaleRowEdit();
             document.getElementById('modal-row-edit').classList.remove('hidden');
         }
         function chiudiRowEditModal() {
@@ -568,13 +580,17 @@
                 container.innerHTML = '<span class="text-sm text-gray-500">Nessuna foto</span>';
             }
         }
-        function aggiornaRowEdit() {
+        function calcolaNettoRowEdit() {
             const listino = parseItalianFloat(document.getElementById('row-listino').value);
             const sconto = parseFloat(document.getElementById('row-sconto').value) || 0;
             const scontato = listino * (1 - Math.min(100, Math.max(0, sconto)) / 100);
+            document.getElementById('row-scontato').value = formatItalianFloat(scontato);
+            aggiornaSubtotaleRowEdit();
+        }
+        function aggiornaSubtotaleRowEdit() {
+            const scontato = parseItalianFloat(document.getElementById('row-scontato').value);
             const quantita = parseFloat(document.getElementById('row-quantita').value) || 1;
             const subtotale = scontato * quantita;
-            document.getElementById('row-scontato').value = formatItalianFloat(scontato);
             document.getElementById('row-subtotale').textContent = formatItalianFloat(subtotale);
         }
         function salvaRowEdit() {
@@ -746,6 +762,14 @@
             statoApplicazione.mostra_totale = document.getElementById('mostra-totale').checked;
             document.getElementById('totale-display').classList.toggle('hidden', !statoApplicazione.mostra_totale);
             calcolaTotale();
+            salvaInCache();
+        }
+        function toggleNascondiListino() {
+            statoApplicazione.nascondi_listino = document.getElementById('nascondi-listino').checked;
+            salvaInCache();
+        }
+        function toggleNascondiSconto() {
+            statoApplicazione.nascondi_sconto = document.getElementById('nascondi-sconto').checked;
             salvaInCache();
         }
 
