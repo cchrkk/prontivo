@@ -723,7 +723,11 @@
             statoApplicazione.articoli.push({ tipo: '', foto: null, titolo: '', descrizione: '', descrizione_lunga: '', confezione: '', quantita: '1', listino: '', sconto: '', scontato: '0,00', peso: '', larghezza: '', profondita: '', altezza: '' });
             salvaInCache(); renderTabella();
         }
-        function rimuoviRiga(index) { statoApplicazione.articoli.splice(index, 1); salvaInCache(); renderTabella(); }
+        function rimuoviRiga(index) {
+            if (!confirm('Sei sicuro di voler eliminare questa riga?')) return;
+            statoApplicazione.articoli.splice(index, 1);
+            salvaInCache(); renderTabella();
+        }
         function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); calcolaTotale(); }
 
         function parseItalianFloat(s) {
