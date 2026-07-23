@@ -16,9 +16,9 @@
         <!-- HEADER APPLICAZIONE -->
         <header class="bg-slate-900 text-white p-6 rounded-t-lg shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center">
-                <div id="ui-logo-container" class="flex items-center gap-3">
-                    <img src="prontivo.svg" alt="Prontivo" class="w-10 h-10 block">
-                    <h1 class="text-2xl font-bold tracking-tight leading-none my-0">Prontivo</h1>
+                <div id="ui-logo-container" class="flex items-center gap-3" style="line-height:1;">
+                    <img src="prontivo.svg?v=2" alt="Prontivo" class="w-10 h-10" style="display:block; margin:0;">
+                    <h1 class="text-2xl font-bold tracking-tight" style="margin:0; padding:0; line-height:1;">Prontivo</h1>
                 </div>
             </div>
             
@@ -371,7 +371,7 @@
                 const res = await fetch('/api/logo-ui');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" class="max-h-12 w-auto object-contain bg-white p-1 rounded block" alt="Logo"><h1 class="text-2xl font-bold tracking-tight leading-none my-0">Prontivo</h1>`;
+                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" style="max-height:48px; width:auto; object-fit:contain; background:#fff; padding:4px; border-radius:4px; display:block; margin:0;" alt="Logo"><h1 class="text-2xl font-bold tracking-tight" style="margin:0; padding:0; line-height:1;">Prontivo</h1>`;
                 }
             } catch (e) {}
         }
