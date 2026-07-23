@@ -7,6 +7,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static(__dirname, { index: false }));
 
 // Inizializzazione Database SQLite locale
 const DB_PATH = path.join(__dirname, 'preventivi.db');
