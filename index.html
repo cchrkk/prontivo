@@ -97,7 +97,7 @@
                 <img src="prontivo.svg?v=2" alt="Prontivo" class="w-10 h-10" style="display:block; margin:0; flex-shrink:0;">
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight" style="margin:0; padding:0; line-height:1;">Prontivo</h1>
-                    <p class="text-xs text-slate-400 italic mt-1" style="margin:0; padding:0; line-height:1;">v2026.7.3</p>
+                    <p class="text-xs text-slate-400 italic mt-1" style="margin:0; padding:0; line-height:1;">v2026.7.4</p>
                 </div>
             </div>
             
@@ -585,7 +585,7 @@
                 const res = await fetch('/api/logo-ui');
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" style="max-height:48px; width:auto; object-fit:contain; background:#fff; padding:4px; border-radius:4px; display:block; margin:0; flex-shrink:0;" alt="Logo"><div><h1 class="text-2xl font-bold tracking-tight" style="margin:0; padding:0; line-height:1;">Prontivo</h1><p class="text-xs text-slate-400 italic mt-1" style="margin:0; padding:0; line-height:1;">v2026.7.3</p></div>`;
+                    if (data.logo) document.getElementById('ui-logo-container').innerHTML = `<img src="${data.logo}" style="max-height:48px; width:auto; object-fit:contain; background:#fff; padding:4px; border-radius:4px; display:block; margin:0; flex-shrink:0;" alt="Logo"><div><h1 class="text-2xl font-bold tracking-tight" style="margin:0; padding:0; line-height:1;">Prontivo</h1><p class="text-xs text-slate-400 italic mt-1" style="margin:0; padding:0; line-height:1;">v2026.7.4</p></div>`;
                 }
             } catch (e) {}
         }
