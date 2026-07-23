@@ -106,6 +106,13 @@
                         <tbody class="divide-y divide-gray-200 bg-white" id="container-righe"></tbody>
                     </table>
                 </div>
+                <div class="flex items-center justify-between mt-3">
+                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                        <input type="checkbox" id="mostra-totale" onchange="toggleTotale()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        Mostra totale nel PDF
+                    </label>
+                    <div id="totale-display" class="hidden text-lg font-bold text-emerald-700">Totale: € <span id="totale-valore">0,00</span></div>
+                </div>
             </div>
 
             <!-- NOTE -->
@@ -212,6 +219,11 @@
             document.getElementById('doc-note').value = statoApplicazione.note || '';
             document.getElementById('doc-firma-nome').value = statoApplicazione.firma_nome || '';
             document.getElementById('doc-firma-azienda').value = statoApplicazione.firma_azienda || '';
+
+            const mostraTotale = !!statoApplicazione.mostra_totale;
+            document.getElementById('mostra-totale').checked = mostraTotale;
+            document.getElementById('totale-display').classList.toggle('hidden', !mostraTotale);
+            calcolaTotale();
 
             renderTabella();
             aggiornaSelettoreDB();
@@ -449,7 +461,26 @@
             salvaInCache(); renderTabella();
         }
         function rimuoviRiga(index) { statoApplicazione.articoli.splice(index, 1); salvaInCache(); renderTabella(); }
-        function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); }
+        function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); calcolaTotale(); }
+
+        function parseItalianFloat(s) {
+            if (!s) return 0;
+            return parseFloat(s.toString().replace(/\./g, '').replace(',', '.')) || 0;
+        }
+        function formatItalianFloat(n) {
+            return n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+        function calcolaTotale() {
+            if (!statoApplicazione.mostra_totale) return;
+            const totale = (statoApplicazione.articoli || []).reduce((sum, a) => sum + parseItalianFloat(a.scontato), 0);
+            document.getElementById('totale-valore').textContent = formatItalianFloat(totale);
+        }
+        function toggleTotale() {
+            statoApplicazione.mostra_totale = document.getElementById('mostra-totale').checked;
+            document.getElementById('totale-display').classList.toggle('hidden', !statoApplicazione.mostra_totale);
+            calcolaTotale();
+            salvaInCache();
+        }
 
         let previewBlobUrl = null;
 

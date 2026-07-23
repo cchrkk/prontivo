@@ -351,6 +351,9 @@ function generaHtmlDinamico(dati, logoBase64) {
             .signature-block { margin-top: 20px; font-size: 10.5pt; }
             .signature-name { font-weight: bold; color: #222; }
             .company-name { color: #666; font-style: italic; }
+            .total-box { background: linear-gradient(135deg, #1e3a60, #2e5436); color: white; padding: 14px 20px; border-radius: 6px; text-align: right; font-size: 13pt; margin-bottom: 20px; }
+            .total-label { font-weight: normal; margin-right: 8px; }
+            .total-value { font-weight: bold; font-size: 15pt; }
         </style>
     </head>
     <body>
@@ -365,6 +368,14 @@ function generaHtmlDinamico(dati, logoBase64) {
         <div class="titolo-oggetto">Oggetto: ${dati.oggetto}</div>
         <div class="intro-text">Buongiorno,<br>${dati.testo_intro}</div>
         ${htmlSezioni}
+        ${dati.mostra_totale ? (() => {
+            const totale = dati.articoli.reduce((sum, a) => {
+                const val = parseFloat((a.scontato || '0').replace(/\./g, '').replace(',', '.')) || 0;
+                return sum + val;
+            }, 0);
+            const totaleStr = totale.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `<div class="total-box"><span class="total-label">Totale:</span> <span class="total-value">€ ${totaleStr}</span></div>`;
+        })() : ''}
         <div class="notes-card">
             <div class="notes-title">Note e Condizioni di Vendita</div>
             <ul class="notes-list">

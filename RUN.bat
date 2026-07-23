@@ -38,5 +38,4 @@ echo.
 start "" cmd /c "timeout /t 3 >nul & start http://localhost:%PORT%"
 
 node server.js
-
-pause
+exit /b %ERRORLEVEL%
