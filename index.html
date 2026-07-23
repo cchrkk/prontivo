@@ -8,13 +8,91 @@
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
     <style>
         .dropzone.dragover { background-color: #dbeafe; border-color: #2563eb; }
+
+        /* Splash screen */
+        .splash-screen {
+            position: fixed; inset: 0; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1e3a60 0%, #45ada8 100%);
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .splash-screen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-logo { width: 96px; height: 96px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3)); animation: splashPulse 1.5s ease-in-out infinite; }
+        .splash-title { color: white; font-size: 2rem; font-weight: bold; margin-top: 1.5rem; letter-spacing: -0.02em; }
+        .splash-subtitle { color: rgba(255,255,255,0.8); font-size: 0.875rem; margin-top: 0.5rem; }
+        @keyframes splashPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        /* Dark mode */
+        :root { --header-bg: #f8fafc; --header-text: #1e293b; --header-muted: #64748b; }
+        html.dark { --header-bg: #0f172a; --header-text: #ffffff; --header-muted: #94a3b8; }
+        .header-bar { background-color: var(--header-bg); color: var(--header-text); }
+
+        html.dark body { background-color: #0f172a; color: #e2e8f0; }
+        html.dark .bg-white { background-color: #1e293b; }
+        html.dark .bg-gray-50 { background-color: #0f172a; }
+        html.dark .bg-slate-50 { background-color: #334155; }
+        html.dark .text-slate-800 { color: #f1f5f9; }
+        html.dark .text-slate-900 { color: #f8fafc; }
+        html.dark .text-gray-500 { color: #94a3b8; }
+        html.dark .text-gray-600 { color: #94a3b8; }
+        html.dark .text-gray-700 { color: #cbd5e1; }
+        html.dark .text-gray-400 { color: #94a3b8; }
+        html.dark .border-gray-200 { border-color: #475569; }
+        html.dark .border-gray-300 { border-color: #475569; }
+        html.dark input, html.dark textarea, html.dark select { background-color: #334155; color: #f1f5f9; border-color: #475569; }
+        html.dark input::placeholder, html.dark textarea::placeholder { color: #94a3b8; }
+        html.dark .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+        html.dark .hover\:bg-slate-50:hover { background-color: #334155 !important; }
+        html.dark .hover\:text-blue-600:hover { color: #60a5fa; }
+        html.dark .hover\:border-blue-500:hover { border-color: #60a5fa; }
+        #ui-logo-container p { color: var(--header-muted); }
+        html.dark .modal-content, html.dark .bg-white.rounded-lg { background-color: #1e293b; }
+        html.dark .bg-white { background-color: #1e293b !important; }
+        html.dark #container-righe { background-color: #1e293b; }
+        html.dark #container-righe tr { background-color: transparent; }
+        html.dark #container-righe tr:hover { background-color: #334155; }
+        html.dark #tabella-articoli th { color: #94a3b8; }
+        html.dark #tabella-articoli td { color: #e2e8f0; }
+        html.dark .bg-white .text-gray-500 { color: #94a3b8; }
+        html.dark .bg-white .text-gray-600 { color: #94a3b8; }
+        html.dark .bg-white .text-gray-700 { color: #cbd5e1; }
+        html.dark .bg-white .text-emerald-700 { color: #34d399; }
+        html.dark .bg-white .text-indigo-700 { color: #818cf8; }
+        html.dark .bg-white .text-blue-600 { color: #60a5fa; }
+        html.dark .bg-white .text-red-600 { color: #f87171; }
+        html.dark .bg-white .bg-rose-100 { background-color: #7f1d1d; color: #fecaca; }
+        html.dark .bg-white .bg-blue-100 { background-color: #1e3a8a; color: #dbeafe; }
+        html.dark .bg-white .bg-amber-100 { background-color: #78350f; color: #fef3c7; }
+        html.dark .bg-white .bg-emerald-100 { background-color: #064e3b; color: #d1fae5; }
+        html.dark .bg-white .bg-purple-100 { background-color: #581c87; color: #f3e8ff; }
+        html.dark .bg-white .bg-rose-100 { background-color: #7f1d1d; color: #fecaca; }
+        html.dark .bg-white .bg-cyan-100 { background-color: #164e63; color: #cffafe; }
+        html.dark .bg-white .bg-gray-100 { background-color: #374151; color: #f3f4f6; }
+        html.dark .dropzone { border-color: #475569; }
+        html.dark .dropzone:hover { border-color: #60a5fa; }
+        html.dark .line-clamp-2 { color: #94a3b8; }
+        html.dark .bg-slate-200 { background-color: #475569; color: #f1f5f9; }
+        html.dark .bg-slate-200:hover { background-color: #64748b; }
+        html.dark .bg-slate-700 { background-color: #334155; }
+        html.dark .bg-slate-700:hover { background-color: #475569; }
+        html.dark .bg-slate-800 { background-color: #334155; }
+        html.dark .bg-slate-800:hover { background-color: #475569; }
+        html.dark .text-slate-400 { color: #94a3b8; }
+        html.dark .text-slate-700 { color: #f1f5f9; }
+        html.dark .bg-emerald-50 { background-color: #064e3b; color: #d1fae5; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans min-h-screen pb-12">
 
+    <div id="splash-screen" class="splash-screen">
+        <img src="prontivo.svg" alt="Prontivo" class="splash-logo">
+        <div class="splash-title">Prontivo</div>
+        <div class="splash-subtitle">Generatore di preventivi professionali</div>
+    </div>
+
     <div class="max-w-6xl mx-auto px-4 mt-8">
         <!-- HEADER APPLICAZIONE -->
-        <header class="bg-slate-900 text-white p-6 rounded-t-lg shadow-md flex flex-col gap-4">
+        <header class="header-bar p-6 rounded-t-lg shadow-md flex flex-col gap-4">
             <div id="ui-logo-container" class="flex items-center gap-3" style="line-height:1;">
                 <img src="prontivo.svg?v=2" alt="Prontivo" class="w-10 h-10" style="display:block; margin:0; flex-shrink:0;">
                 <div>
@@ -24,6 +102,11 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
+                <!-- Theme toggle -->
+                <button onclick="cycleTheme()" id="theme-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-3 rounded text-sm transition" title="Cambia tema">
+                    🌓
+                </button>
+
                 <!-- Selettore Preventivi da DB -->
                 <select id="selettore-db" onchange="caricaDaDB(this.value)" class="bg-slate-800 text-white text-sm rounded border border-slate-700 p-2 max-w-xs focus:outline-none">
                     <option value="">-- Carica da Database --</option>
@@ -94,24 +177,36 @@
                             <tr>
                                 <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 5%">Ordina</th>
                                 <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 10%">Categoria</th>
-                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 12%">Foto</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 8%">Foto</th>
                                 <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 20%">Titolo / Prodotto</th>
                                 <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 22%">Descrizione</th>
-                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 7%">Listino (€)</th>
-                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 7%">Sconto</th>
-                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 8%">Conf.</th>
-                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 7%">Netto (€)</th>
-                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 4%">Azioni</th>
+                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 6%">Listino (€)</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 6%">Sconto</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 5%">Qtà</th>
+                                <th class="px-3 py-3 text-left text-xs font-bold text-gray-500 uppercase" style="width: 7%">Conf.</th>
+                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 6%">Netto (€)</th>
+                                <th class="px-3 py-3 text-right text-xs font-bold text-gray-500 uppercase" style="width: 6%">Subtotale</th>
+                                <th class="px-3 py-3 text-center text-xs font-bold text-gray-500 uppercase" style="width: 5%">Azioni</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white" id="container-righe"></tbody>
                     </table>
                 </div>
                 <div class="flex items-center justify-between mt-3">
-                    <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
-                        <input type="checkbox" id="mostra-totale" onchange="toggleTotale()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                        Mostra totale nel PDF
-                    </label>
+                    <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="mostra-totale" onchange="toggleTotale()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Mostra totale nel PDF
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="nascondi-listino" onchange="toggleNascondiListino()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Nascondi listino nel PDF
+                        </label>
+                        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+                            <input type="checkbox" id="nascondi-sconto" onchange="toggleNascondiSconto()" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            Nascondi sconto nel PDF
+                        </label>
+                    </div>
                     <div id="totale-display" class="hidden text-lg font-bold text-emerald-700">Totale: € <span id="totale-valore">0,00</span></div>
                 </div>
             </div>
@@ -168,6 +263,85 @@
         </div>
     </div>
 
+    <!-- MODAL MODIFICA RIGA -->
+    <div id="modal-row-edit" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-lg font-bold text-slate-900">Modifica Articolo</h3>
+                <button onclick="chiudiRowEditModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Categoria</label>
+                    <input type="text" id="row-tipo" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Titolo / Prodotto</label>
+                    <input type="text" id="row-titolo" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaRowEdit()">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700">Descrizione Breve</label>
+                    <textarea id="row-descrizione" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaRowEdit()"></textarea>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700">Descrizione Lunga</label>
+                    <textarea id="row-descrizione_lunga" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" placeholder="Dettagli tecnici aggiuntivi..." oninput="aggiornaRowEdit()"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Confezione</label>
+                    <input type="text" id="row-confezione" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Quantità</label>
+                    <input type="number" id="row-quantita" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm" oninput="aggiornaSubtotaleRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Listino (€)</label>
+                    <input type="text" id="row-listino" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="calcolaNettoRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Sconto (%)</label>
+                    <input type="number" id="row-sconto" step="0.1" min="0" max="100" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="calcolaNettoRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Prezzo Netto (€)</label>
+                    <input type="text" id="row-scontato" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right font-bold text-emerald-700" oninput="aggiornaSubtotaleRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Subtotale (€)</label>
+                    <div id="row-subtotale" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right font-bold bg-slate-50">0,00</div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Peso (kg)</label>
+                    <input type="number" id="row-peso" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700">Misure L×P×H (cm)</label>
+                    <div class="flex gap-2 mt-1">
+                        <input type="number" id="row-larghezza" step="0.1" min="0" placeholder="L" class="w-1/3 border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                        <input type="number" id="row-profondita" step="0.1" min="0" placeholder="P" class="w-1/3 border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                        <input type="number" id="row-altezza" step="0.1" min="0" placeholder="H" class="w-1/3 border border-gray-300 rounded-md p-2 shadow-sm text-right" oninput="aggiornaRowEdit()">
+                    </div>
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-semibold text-gray-700">Foto</label>
+                    <div id="row-foto-preview" class="mt-1 flex items-center gap-3"></div>
+                    <div id="row-foto-drop" class="dropzone mt-2 border-2 border-dashed border-gray-300 rounded-md p-3 text-center text-sm text-gray-500 cursor-pointer hover:border-blue-500 transition"
+                         ondragover="handleRowDragOver(event)" ondragleave="handleRowDragLeave(event)" ondrop="handleRowDrop(event)" onpaste="handleRowPaste(event)" contenteditable="true">
+                        Trascina un'immagine o incollala qui
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t">
+                <button onclick="rimuoviFotoRowEdit()" class="text-red-600 hover:text-red-800 text-sm font-semibold">Rimuovi foto</button>
+                <div class="flex gap-2">
+                    <button onclick="chiudiRowEditModal()" class="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded font-medium text-slate-700">Annulla</button>
+                    <button onclick="salvaRowEdit()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded">Salva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         function dataAttuale() {
             const mesi = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
@@ -187,6 +361,43 @@
         };
 
         let statoApplicazione = {};
+        let editingRowIndex = null;
+        let editingRowFoto = null;
+
+        // THEME
+        function getTheme() {
+            const saved = localStorage.getItem('prontivo_theme');
+            if (['light','dark','auto'].includes(saved)) return saved;
+            return 'auto';
+        }
+        function setTheme(mode) {
+            localStorage.setItem('prontivo_theme', mode);
+            applyTheme();
+            const btn = document.getElementById('theme-btn');
+            if (btn) btn.textContent = mode === 'light' ? '☀️' : mode === 'dark' ? '🌙' : '🌓';
+        }
+        function applyTheme() {
+            const mode = getTheme();
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const isDark = mode === 'dark' || (mode === 'auto' && prefersDark);
+            document.documentElement.classList.toggle('dark', isDark);
+            document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+        }
+        function cycleTheme() {
+            const modes = ['auto', 'light', 'dark'];
+            const current = getTheme();
+            const next = modes[(modes.indexOf(current) + 1) % modes.length];
+            setTheme(next);
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+        applyTheme();
+
+        function nascondiSplash() {
+            const splash = document.getElementById('splash-screen');
+            if (!splash) return;
+            splash.classList.add('hidden');
+            setTimeout(() => splash.remove(), 500);
+        }
 
         async function caricaConfig() {
             try {
@@ -223,6 +434,8 @@
 
             const mostraTotale = !!statoApplicazione.mostra_totale;
             document.getElementById('mostra-totale').checked = mostraTotale;
+            document.getElementById('nascondi-listino').checked = !!statoApplicazione.nascondi_listino;
+            document.getElementById('nascondi-sconto').checked = !!statoApplicazione.nascondi_sconto;
             document.getElementById('totale-display').classList.toggle('hidden', !mostraTotale);
             calcolaTotale();
 
@@ -377,6 +590,103 @@
             } catch (e) {}
         }
 
+        function apriRowEditModal(index) {
+            editingRowIndex = index;
+            const art = statoApplicazione.articoli[index];
+            editingRowFoto = art.foto || null;
+            document.getElementById('row-tipo').value = art.tipo || '';
+            document.getElementById('row-titolo').value = art.titolo || '';
+            document.getElementById('row-descrizione').value = art.descrizione || '';
+            document.getElementById('row-descrizione_lunga').value = art.descrizione_lunga || '';
+            document.getElementById('row-confezione').value = art.confezione || '';
+            document.getElementById('row-quantita').value = art.quantita || '1';
+            document.getElementById('row-listino').value = art.listino || '';
+            document.getElementById('row-sconto').value = art.sconto || '';
+            document.getElementById('row-scontato').value = art.scontato || '0,00';
+            document.getElementById('row-peso').value = art.peso || '';
+            document.getElementById('row-larghezza').value = art.larghezza || '';
+            document.getElementById('row-profondita').value = art.profondita || '';
+            document.getElementById('row-altezza').value = art.altezza || '';
+            renderRowFotoPreview();
+            aggiornaSubtotaleRowEdit();
+            document.getElementById('modal-row-edit').classList.remove('hidden');
+        }
+        function chiudiRowEditModal() {
+            document.getElementById('modal-row-edit').classList.add('hidden');
+            editingRowIndex = null;
+            editingRowFoto = null;
+        }
+        function renderRowFotoPreview() {
+            const container = document.getElementById('row-foto-preview');
+            if (!container) return;
+            if (editingRowFoto) {
+                container.innerHTML = `<img src="${editingRowFoto}" class="w-16 h-16 object-contain border rounded"><span class="text-sm text-gray-500">Foto caricata</span>`;
+            } else {
+                container.innerHTML = '<span class="text-sm text-gray-500">Nessuna foto</span>';
+            }
+        }
+        function calcolaNettoRowEdit() {
+            const listino = parseItalianFloat(document.getElementById('row-listino').value);
+            const sconto = parseFloat(document.getElementById('row-sconto').value) || 0;
+            const scontato = listino * (1 - Math.min(100, Math.max(0, sconto)) / 100);
+            document.getElementById('row-scontato').value = formatItalianFloat(scontato);
+            aggiornaSubtotaleRowEdit();
+        }
+        function aggiornaSubtotaleRowEdit() {
+            const scontato = parseItalianFloat(document.getElementById('row-scontato').value);
+            const quantita = parseFloat(document.getElementById('row-quantita').value) || 1;
+            const subtotale = scontato * quantita;
+            document.getElementById('row-subtotale').textContent = formatItalianFloat(subtotale);
+        }
+        function salvaRowEdit() {
+            if (editingRowIndex === null) return;
+            const art = statoApplicazione.articoli[editingRowIndex];
+            art.tipo = document.getElementById('row-tipo').value;
+            art.titolo = document.getElementById('row-titolo').value;
+            art.descrizione = document.getElementById('row-descrizione').value;
+            art.descrizione_lunga = document.getElementById('row-descrizione_lunga').value;
+            art.confezione = document.getElementById('row-confezione').value;
+            art.quantita = document.getElementById('row-quantita').value;
+            art.listino = document.getElementById('row-listino').value;
+            art.sconto = document.getElementById('row-sconto').value;
+            art.scontato = document.getElementById('row-scontato').value;
+            art.peso = document.getElementById('row-peso').value;
+            art.larghezza = document.getElementById('row-larghezza').value;
+            art.profondita = document.getElementById('row-profondita').value;
+            art.altezza = document.getElementById('row-altezza').value;
+            art.foto = editingRowFoto;
+            salvaInCache(); renderTabella(); calcolaTotale(); chiudiRowEditModal();
+        }
+        function rimuoviFotoRowEdit() {
+            editingRowFoto = null;
+            renderRowFotoPreview();
+        }
+        function handleRowDragOver(e) { e.preventDefault(); document.getElementById('row-foto-drop').classList.add('dragover'); }
+        function handleRowDragLeave(e) { document.getElementById('row-foto-drop').classList.remove('dragover'); }
+        function handleRowDrop(e) {
+            e.preventDefault();
+            document.getElementById('row-foto-drop').classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) leggiImmagineRowEdit(file);
+        }
+        function handleRowPaste(e) {
+            e.preventDefault();
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) { leggiImmagineRowEdit(items[i].getAsFile()); break; }
+            }
+        }
+        function leggiImmagineRowEdit(file) {
+            const reader = new FileReader();
+            reader.onload = function(event) { editingRowFoto = event.target.result; renderRowFotoPreview(); };
+            reader.readAsDataURL(file);
+        }
+        function subtotaleRiga(art) {
+            const q = parseFloat(art.quantita) || 1;
+            const p = parseItalianFloat(art.scontato);
+            return q * p;
+        }
+
         function renderTabella() {
             const container = document.getElementById('container-righe');
             container.innerHTML = '';
@@ -406,6 +716,7 @@
                 const disabilitaSu = index === 0 ? 'opacity-30 cursor-not-allowed' : '';
                 const disabilitaGiu = index === statoApplicazione.articoli.length - 1 ? 'opacity-30 cursor-not-allowed' : '';
 
+                const subtotale = subtotaleRiga(art);
                 tr.innerHTML = `
                     <td class="px-2 py-2 text-center whitespace-nowrap">
                         <div class="flex flex-col items-center justify-center space-y-0.5">
@@ -414,20 +725,32 @@
                         </div>
                     </td>
                     <td class="px-2 py-2">
-                        <input type="text" value="${art.tipo || ''}" placeholder="es. macchina" onchange="aggiornaDato(${index}, 'tipo', this.value)" class="w-full text-xs font-semibold p-1 border border-gray-200 rounded capitalize">
+                        <span class="${badgeClass} text-xs px-2 py-1 rounded font-semibold capitalize">${art.tipo || '—'}</span>
                     </td>
                     <td class="px-2 py-2 text-center">
-                        <div id="dz-${index}" contenteditable="true" class="dropzone border-2 border-dashed border-gray-200 rounded p-1 min-h-[50px] flex items-center justify-center cursor-pointer overflow-hidden focus:outline-none focus:border-blue-500" ondragover="handleDragOver(event, ${index})" ondragleave="handleDragLeave(event, ${index})" ondrop="handleDrop(event, ${index})" onpaste="handlePaste(event, ${index})">
-                            ${dropzoneContent}
+                        <div class="cursor-pointer" onclick="apriRowEditModal(${index})" title="Clicca per modificare foto e dati">
+                            ${art.foto ? `<img src="${art.foto}" class="w-12 h-12 object-contain border rounded mx-auto">` : `<div class="w-12 h-12 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400 text-[10px] mx-auto">No foto</div>`}
                         </div>
                     </td>
-                    <td class="px-2 py-2"><input type="text" value="${art.titolo || ''}" onchange="aggiornaDato(${index}, 'titolo', this.value)" class="w-full text-sm p-1 border border-gray-200 rounded"></td>
-                    <td class="px-2 py-2"><textarea rows="2" onchange="aggiornaDato(${index}, 'descrizione', this.value)" class="w-full text-sm p-1 border border-gray-200 rounded block resize-y">${art.descrizione || ''}</textarea></td>
-                    <td class="px-2 py-2"><input type="text" value="${art.listino || ''}" class="text-right w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'listino', this.value)"></td>
-                    <td class="px-2 py-2"><input type="text" value="${art.sconto || ''}" class="text-center w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'sconto', this.value)"></td>
-                    <td class="px-2 py-2"><input type="text" value="${art.confezione || ''}" placeholder="es. 150 pz" class="w-full text-xs p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'confezione', this.value)"></td>
-                    <td class="px-2 py-2"><input type="text" value="${art.scontato || ''}" class="text-right font-medium text-emerald-700 w-full text-sm p-1 border border-gray-200 rounded" onchange="aggiornaDato(${index}, 'scontato', this.value)"></td>
-                    <td class="px-4 py-2 text-center"><button onclick="rimuoviRiga(${index})" class="text-red-600 hover:text-red-900 font-bold text-sm">✕</button></td>
+                    <td class="px-2 py-2">
+                        <div class="cursor-pointer group" onclick="apriRowEditModal(${index})">
+                            <div class="font-semibold text-sm group-hover:text-blue-600 transition">${art.titolo || '<span class="text-gray-400 italic">Clicca per modificare</span>'}</div>
+                            ${art.descrizione ? `<div class="text-xs text-gray-500 mt-1 line-clamp-2">${art.descrizione}</div>` : ''}
+                        </div>
+                    </td>
+                    <td class="px-2 py-2">
+                        <div class="text-xs text-gray-500 line-clamp-2">${art.descrizione_lunga || art.descrizione || '—'}</div>
+                    </td>
+                    <td class="px-2 py-2 text-right text-sm font-medium">${art.listino ? '€ ' + art.listino : '—'}</td>
+                    <td class="px-2 py-2 text-center text-sm">${art.sconto ? `<span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 rounded text-xs font-bold">${art.sconto}%</span>` : '—'}</td>
+                    <td class="px-2 py-2 text-center text-sm font-medium">${art.quantita || '1'}</td>
+                    <td class="px-2 py-2 text-left text-xs">${art.confezione || '—'}</td>
+                    <td class="px-2 py-2 text-right text-sm font-bold text-emerald-700">€ ${art.scontato || '0,00'}</td>
+                    <td class="px-2 py-2 text-right text-sm font-bold text-indigo-700">€ ${formatItalianFloat(subtotale)}</td>
+                    <td class="px-2 py-2 text-center whitespace-nowrap">
+                        <button onclick="apriRowEditModal(${index})" class="text-blue-600 hover:text-blue-800 font-bold text-sm mr-2" title="Modifica">✎</button>
+                        <button onclick="rimuoviRiga(${index})" class="text-red-600 hover:text-red-900 font-bold text-sm" title="Elimina">✕</button>
+                    </td>
                 `;
                 container.appendChild(tr);
             });
@@ -458,10 +781,14 @@
         function rimuoviFoto(index, event) { event.stopPropagation(); statoApplicazione.articoli[index].foto = null; salvaInCache(); renderTabella(); }
         function aggiungiRiga() {
             if (!statoApplicazione.articoli) statoApplicazione.articoli = [];
-            statoApplicazione.articoli.push({ tipo: '', foto: null, titolo: '', descrizione: '', confezione: '', listino: '', sconto: '', scontato: '0,00' });
+            statoApplicazione.articoli.push({ tipo: '', foto: null, titolo: '', descrizione: '', descrizione_lunga: '', confezione: '', quantita: '1', listino: '', sconto: '', scontato: '0,00', peso: '', larghezza: '', profondita: '', altezza: '' });
             salvaInCache(); renderTabella();
         }
-        function rimuoviRiga(index) { statoApplicazione.articoli.splice(index, 1); salvaInCache(); renderTabella(); }
+        function rimuoviRiga(index) {
+            if (!confirm('Sei sicuro di voler eliminare questa riga?')) return;
+            statoApplicazione.articoli.splice(index, 1);
+            salvaInCache(); renderTabella();
+        }
         function aggiornaDato(index, chiave, valore) { statoApplicazione.articoli[index][chiave] = valore; salvaInCache(); calcolaTotale(); }
 
         function parseItalianFloat(s) {
@@ -473,13 +800,21 @@
         }
         function calcolaTotale() {
             if (!statoApplicazione.mostra_totale) return;
-            const totale = (statoApplicazione.articoli || []).reduce((sum, a) => sum + parseItalianFloat(a.scontato), 0);
+            const totale = (statoApplicazione.articoli || []).reduce((sum, a) => sum + subtotaleRiga(a), 0);
             document.getElementById('totale-valore').textContent = formatItalianFloat(totale);
         }
         function toggleTotale() {
             statoApplicazione.mostra_totale = document.getElementById('mostra-totale').checked;
             document.getElementById('totale-display').classList.toggle('hidden', !statoApplicazione.mostra_totale);
             calcolaTotale();
+            salvaInCache();
+        }
+        function toggleNascondiListino() {
+            statoApplicazione.nascondi_listino = document.getElementById('nascondi-listino').checked;
+            salvaInCache();
+        }
+        function toggleNascondiSconto() {
+            statoApplicazione.nascondi_sconto = document.getElementById('nascondi-sconto').checked;
             salvaInCache();
         }
 
@@ -577,6 +912,12 @@
             await caricaConfig();
             inizializzaDati();
             caricaLogoInUI();
+            const themeBtn = document.getElementById('theme-btn');
+            if (themeBtn) {
+                const mode = getTheme();
+                themeBtn.textContent = mode === 'light' ? '☀️' : mode === 'dark' ? '🌙' : '🌓';
+            }
+            setTimeout(nascondiSplash, 1500);
         })();
     </script>
 </body>

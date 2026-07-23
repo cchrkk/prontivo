@@ -7,6 +7,7 @@ const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static(__dirname, { index: false }));
 
 // Inizializzazione Database SQLite locale
 const DB_PATH = path.join(__dirname, 'preventivi.db');
@@ -200,6 +201,26 @@ app.post('/api/preventivo', async (req, res) => {
     }
 });
 
+function parseEuro(v) {
+    return parseFloat((v || '0').replace(/\./g, '').replace(',', '.')) || 0;
+}
+function formatEuro(n) {
+    return n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function buildDescription(a) {
+    let desc = a.descrizione_lunga || a.descrizione || '';
+    const extras = [];
+    if (a.peso) extras.push(`Peso: ${a.peso} kg`);
+    if (a.larghezza || a.profondita || a.altezza) {
+        const dims = [a.larghezza, a.profondita, a.altezza].filter(Boolean).join(' x ');
+        if (dims) extras.push(`Dimensioni (LxPxH): ${dims} cm`);
+    }
+    if (extras.length > 0) {
+        desc = desc ? desc + '\n' + extras.join(' | ') : extras.join(' | ');
+    }
+    return desc;
+}
+
 function generaHtmlDinamico(dati, logoBase64) {
     let headerLogoHtml = `<div class="logo-text">${process.env.COMPANY_LOGO_TEXT || 'company'}</div>`;
     if (logoBase64) headerLogoHtml = `<img src="${logoBase64}" class="logo-img" alt="Logo">`;
@@ -236,75 +257,54 @@ function generaHtmlDinamico(dati, logoBase64) {
         coloreIndex++;
         const haConfezione = sezione.articoli.some(a => a.confezione);
 
-        if (haConfezione) {
-            // Tabella con colonna confezione
-            htmlSezioni += `
+        const nascondiListino = !!dati.nascondi_listino;
+        const nascondiSconto = !!dati.nascondi_sconto;
+        // Aumenta larghezza foto se nascondiamo colonne
+        const fotoWidth = (nascondiListino && nascondiSconto) ? (haConfezione ? '20%' : '22%') : (nascondiListino || nascondiSconto) ? (haConfezione ? '16%' : '18%') : (haConfezione ? '12%' : '15%');
+        const imgClass = (nascondiListino && nascondiSconto) ? 'product-img product-img-large' : 'product-img';
+        const baseColWidth = haConfezione ? '32%' : '40%';
+        const descWidth = (nascondiListino && nascondiSconto) ? (haConfezione ? '38%' : '45%') : baseColWidth;
+        const headerCells = [
+            `<th class="product-cell" style="width: ${fotoWidth}; text-align: center;">Foto</th>`,
+            `<th class="product-cell" style="width: ${descWidth};">${haConfezione ? 'Prodotto' : 'Configurazione'}</th>`
+        ];
+        if (haConfezione) headerCells.push(`<th class="product-cell" style="width: 12%; text-align: right;">Confezione</th>`);
+        headerCells.push(`<th class="product-cell cell-qty" style="width: ${haConfezione ? '7%' : '8%'};">Q.tà</th>`);
+        if (!nascondiListino) headerCells.push(`<th class="product-cell cell-price" style="width: ${haConfezione ? '11%' : '12%'};">Listino</th>`);
+        if (!nascondiSconto) headerCells.push(`<th class="product-cell cell-discount" style="width: ${haConfezione ? '9%' : '10%'};">Sconto</th>`);
+        headerCells.push(`<th class="product-cell cell-final" style="width: ${haConfezione ? '10%' : '11%'};">Netto</th>`);
+        headerCells.push(`<th class="product-cell cell-final" style="width: ${haConfezione ? '12%' : '14%'};">Subtotale</th>`);
+
+        const bodyRows = sezione.articoli.map(a => {
+            const qty = parseFloat(a.quantita) || 1;
+            const netto = parseEuro(a.scontato);
+            const subtotale = qty * netto;
+            const desc = buildDescription(a);
+            const cells = [
+                `<td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">${a.foto ? `<img src="${a.foto}" class="${imgClass}" />` : `<span style="color:#ccc; font-size:8pt;">No foto</span>`}</td>`,
+                `<td class="product-cell"><div class="config-title">${formattaTesto(a.titolo)}</div><div class="config-desc">${formattaTesto(desc)}</div></td>`
+            ];
+            if (haConfezione) cells.push(`<td class="product-cell" style="text-align: right; color: #555;">${a.confezione || '-'}</td>`);
+            cells.push(`<td class="product-cell cell-qty" style="text-align: center;">${qty}</td>`);
+            if (!nascondiListino) cells.push(`<td class="product-cell cell-price"><span class="old-price">${a.listino ? '€ ' + a.listino : ''}</span></td>`);
+            if (!nascondiSconto) cells.push(`<td class="product-cell cell-discount">${a.sconto ? `<span class="badge-discount">${a.sconto}</span>` : ''}</td>`);
+            cells.push(`<td class="product-cell cell-final">€ ${a.scontato}</td>`);
+            cells.push(`<td class="product-cell cell-final">€ ${formatEuro(subtotale)}</td>`);
+            return `<tr class="product-row-b">${cells.join('')}</tr>`;
+        }).join('');
+
+        htmlSezioni += `
         <div class="section-card">
             <div class="section-header" style="background-color: ${colore};">${sezione.titolo}</div>
             <table class="product-table">
                 <thead>
-                    <tr class="product-row-h">
-                        <th class="product-cell" style="width: 15%; text-align: center;">Foto</th>
-                        <th class="product-cell" style="width: 35%;">Prodotto</th>
-                        <th class="product-cell" style="width: 15%; text-align: right;">Confezione</th>
-                        <th class="product-cell cell-price" style="width: 12%;">Listino</th>
-                        <th class="product-cell cell-discount" style="width: 10%;">Sconto</th>
-                        <th class="product-cell cell-final" style="width: 13%;">Prezzo</th>
-                    </tr>
+                    <tr class="product-row-h">${headerCells.join('')}</tr>
                 </thead>
                 <tbody>
-                    ${sezione.articoli.map(a => `
-                    <tr class="product-row-b">
-                        <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
-                            ${a.foto ? `<img src="${a.foto}" class="product-img" />` : `<span style="color:#ccc; font-size:8pt;">No foto</span>`}
-                        </td>
-                        <td class="product-cell">
-                            <div class="config-title">${formattaTesto(a.titolo)}</div>
-                            <div class="config-desc">${formattaTesto(a.descrizione)}</div>
-                        </td>
-                        <td class="product-cell" style="text-align: right; color: #555;">${a.confezione || '-'}</td>
-                        <td class="product-cell cell-price"><span class="old-price">${a.listino ? '€ ' + a.listino : ''}</span></td>
-                        <td class="product-cell cell-discount">${a.sconto ? `<span class="badge-discount">${a.sconto}</span>` : ''}</td>
-                        <td class="product-cell cell-final">€ ${a.scontato}</td>
-                    </tr>
-                    `).join('')}
+                    ${bodyRows}
                 </tbody>
             </table>
         </div>`;
-        } else {
-            // Tabella classica senza confezione
-            htmlSezioni += `
-        <div class="section-card">
-            <div class="section-header" style="background-color: ${colore};">${sezione.titolo}</div>
-            <table class="product-table">
-                <thead>
-                    <tr class="product-row-h">
-                        <th class="product-cell" style="width: 18%; text-align: center;">Foto</th>
-                        <th class="product-cell" style="width: 42%;">Configurazione</th>
-                        <th class="product-cell cell-price" style="width: 14%;">Listino</th>
-                        <th class="product-cell cell-discount" style="width: 12%;">Sconto</th>
-                        <th class="product-cell cell-final" style="width: 14%;">Prezzo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${sezione.articoli.map(a => `
-                    <tr class="product-row-b">
-                        <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
-                            ${a.foto ? `<img src="${a.foto}" class="product-img" />` : `<span style="color:#ccc; font-size:8pt;">No foto</span>`}
-                        </td>
-                        <td class="product-cell">
-                            <div class="config-title">${formattaTesto(a.titolo)}</div>
-                            <div class="config-desc">${formattaTesto(a.descrizione)}</div>
-                        </td>
-                        <td class="product-cell cell-price"><span class="old-price">${a.listino ? '€ ' + a.listino : ''}</span></td>
-                        <td class="product-cell cell-discount">${a.sconto ? `<span class="badge-discount">${a.sconto}</span>` : ''}</td>
-                        <td class="product-cell cell-final">€ ${a.scontato}</td>
-                    </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>`;
-        }
     });
 
     return `
@@ -336,8 +336,10 @@ function generaHtmlDinamico(dati, logoBase64) {
             .product-cell { padding: 10px; vertical-align: middle; text-align: left; }
             .text-center { text-align: center; }
             .product-img { max-width: 90px; max-height: 90px; object-fit: contain; border-radius: 4px; display: inline-block; }
+            .product-img-large { max-width: 130px; max-height: 130px; }
             .cell-price { text-align: right; }
             .cell-discount { text-align: center; }
+            .cell-qty { text-align: center; font-weight: bold; color: #555; }
             .cell-final { text-align: right; font-weight: bold; color: #2e7d32; }
             .old-price { text-decoration: line-through; color: #a0a0a0; }
             .badge-discount { background-color: #ffebee; color: #c62828; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 9pt; }
@@ -370,10 +372,11 @@ function generaHtmlDinamico(dati, logoBase64) {
         ${htmlSezioni}
         ${dati.mostra_totale ? (() => {
             const totale = dati.articoli.reduce((sum, a) => {
-                const val = parseFloat((a.scontato || '0').replace(/\./g, '').replace(',', '.')) || 0;
-                return sum + val;
+                const qty = parseFloat(a.quantita) || 1;
+                const val = parseEuro(a.scontato);
+                return sum + (qty * val);
             }, 0);
-            const totaleStr = totale.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const totaleStr = formatEuro(totale);
             return `<div class="total-box"><span class="total-label">Totale:</span> <span class="total-value">€ ${totaleStr}</span></div>`;
         })() : ''}
         <div class="notes-card">
