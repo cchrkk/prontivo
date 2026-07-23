@@ -206,6 +206,19 @@ function parseEuro(v) {
 function formatEuro(n) {
     return n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 }
+function buildDescription(a) {
+    let desc = a.descrizione_lunga || a.descrizione || '';
+    const extras = [];
+    if (a.peso) extras.push(`Peso: ${a.peso} kg`);
+    if (a.larghezza || a.profondita || a.altezza) {
+        const dims = [a.larghezza, a.profondita, a.altezza].filter(Boolean).join(' x ');
+        if (dims) extras.push(`Dimensioni (LxPxH): ${dims} cm`);
+    }
+    if (extras.length > 0) {
+        desc = desc ? desc + '\n' + extras.join(' | ') : extras.join(' | ');
+    }
+    return desc;
+}
 
 function generaHtmlDinamico(dati, logoBase64) {
     let headerLogoHtml = `<div class="logo-text">${process.env.COMPANY_LOGO_TEXT || 'company'}</div>`;
@@ -261,12 +274,12 @@ function generaHtmlDinamico(dati, logoBase64) {
                         <th class="product-cell cell-final" style="width: 12%;">Subtotale</th>
                     </tr>
                 </thead>
-                <tbody>
+                    <tbody>
                     ${sezione.articoli.map(a => {
                         const qty = parseFloat(a.quantita) || 1;
                         const netto = parseEuro(a.scontato);
                         const subtotale = qty * netto;
-                        const desc = a.descrizione_lunga || a.descrizione || '';
+                        const desc = buildDescription(a);
                         return `
                     <tr class="product-row-b">
                         <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
@@ -309,7 +322,7 @@ function generaHtmlDinamico(dati, logoBase64) {
                         const qty = parseFloat(a.quantita) || 1;
                         const netto = parseEuro(a.scontato);
                         const subtotale = qty * netto;
-                        const desc = a.descrizione_lunga || a.descrizione || '';
+                        const desc = buildDescription(a);
                         return `
                     <tr class="product-row-b">
                         <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
