@@ -200,6 +200,13 @@ app.post('/api/preventivo', async (req, res) => {
     }
 });
 
+function parseEuro(v) {
+    return parseFloat((v || '0').replace(/\./g, '').replace(',', '.')) || 0;
+}
+function formatEuro(n) {
+    return n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
 function generaHtmlDinamico(dati, logoBase64) {
     let headerLogoHtml = `<div class="logo-text">${process.env.COMPANY_LOGO_TEXT || 'company'}</div>`;
     if (logoBase64) headerLogoHtml = `<img src="${logoBase64}" class="logo-img" alt="Logo">`;
@@ -244,30 +251,39 @@ function generaHtmlDinamico(dati, logoBase64) {
             <table class="product-table">
                 <thead>
                     <tr class="product-row-h">
-                        <th class="product-cell" style="width: 15%; text-align: center;">Foto</th>
-                        <th class="product-cell" style="width: 35%;">Prodotto</th>
-                        <th class="product-cell" style="width: 15%; text-align: right;">Confezione</th>
-                        <th class="product-cell cell-price" style="width: 12%;">Listino</th>
-                        <th class="product-cell cell-discount" style="width: 10%;">Sconto</th>
-                        <th class="product-cell cell-final" style="width: 13%;">Prezzo</th>
+                        <th class="product-cell" style="width: 12%; text-align: center;">Foto</th>
+                        <th class="product-cell" style="width: 32%;">Prodotto</th>
+                        <th class="product-cell" style="width: 12%; text-align: right;">Confezione</th>
+                        <th class="product-cell cell-qty" style="width: 7%;">Q.tà</th>
+                        <th class="product-cell cell-price" style="width: 11%;">Listino</th>
+                        <th class="product-cell cell-discount" style="width: 9%;">Sconto</th>
+                        <th class="product-cell cell-final" style="width: 10%;">Netto</th>
+                        <th class="product-cell cell-final" style="width: 12%;">Subtotale</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${sezione.articoli.map(a => `
+                    ${sezione.articoli.map(a => {
+                        const qty = parseFloat(a.quantita) || 1;
+                        const netto = parseEuro(a.scontato);
+                        const subtotale = qty * netto;
+                        const desc = a.descrizione_lunga || a.descrizione || '';
+                        return `
                     <tr class="product-row-b">
                         <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
                             ${a.foto ? `<img src="${a.foto}" class="product-img" />` : `<span style="color:#ccc; font-size:8pt;">No foto</span>`}
                         </td>
                         <td class="product-cell">
                             <div class="config-title">${formattaTesto(a.titolo)}</div>
-                            <div class="config-desc">${formattaTesto(a.descrizione)}</div>
+                            <div class="config-desc">${formattaTesto(desc)}</div>
                         </td>
                         <td class="product-cell" style="text-align: right; color: #555;">${a.confezione || '-'}</td>
+                        <td class="product-cell cell-qty" style="text-align: center;">${qty}</td>
                         <td class="product-cell cell-price"><span class="old-price">${a.listino ? '€ ' + a.listino : ''}</span></td>
                         <td class="product-cell cell-discount">${a.sconto ? `<span class="badge-discount">${a.sconto}</span>` : ''}</td>
                         <td class="product-cell cell-final">€ ${a.scontato}</td>
+                        <td class="product-cell cell-final">€ ${formatEuro(subtotale)}</td>
                     </tr>
-                    `).join('')}
+                    `}).join('')}
                 </tbody>
             </table>
         </div>`;
@@ -279,28 +295,37 @@ function generaHtmlDinamico(dati, logoBase64) {
             <table class="product-table">
                 <thead>
                     <tr class="product-row-h">
-                        <th class="product-cell" style="width: 18%; text-align: center;">Foto</th>
-                        <th class="product-cell" style="width: 42%;">Configurazione</th>
-                        <th class="product-cell cell-price" style="width: 14%;">Listino</th>
-                        <th class="product-cell cell-discount" style="width: 12%;">Sconto</th>
-                        <th class="product-cell cell-final" style="width: 14%;">Prezzo</th>
+                        <th class="product-cell" style="width: 15%; text-align: center;">Foto</th>
+                        <th class="product-cell" style="width: 40%;">Configurazione</th>
+                        <th class="product-cell cell-qty" style="width: 8%;">Q.tà</th>
+                        <th class="product-cell cell-price" style="width: 12%;">Listino</th>
+                        <th class="product-cell cell-discount" style="width: 10%;">Sconto</th>
+                        <th class="product-cell cell-final" style="width: 11%;">Netto</th>
+                        <th class="product-cell cell-final" style="width: 14%;">Subtotale</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${sezione.articoli.map(a => `
+                    ${sezione.articoli.map(a => {
+                        const qty = parseFloat(a.quantita) || 1;
+                        const netto = parseEuro(a.scontato);
+                        const subtotale = qty * netto;
+                        const desc = a.descrizione_lunga || a.descrizione || '';
+                        return `
                     <tr class="product-row-b">
                         <td class="product-cell text-center" style="text-align: center; padding: 12px 8px;">
                             ${a.foto ? `<img src="${a.foto}" class="product-img" />` : `<span style="color:#ccc; font-size:8pt;">No foto</span>`}
                         </td>
                         <td class="product-cell">
                             <div class="config-title">${formattaTesto(a.titolo)}</div>
-                            <div class="config-desc">${formattaTesto(a.descrizione)}</div>
+                            <div class="config-desc">${formattaTesto(desc)}</div>
                         </td>
+                        <td class="product-cell cell-qty" style="text-align: center;">${qty}</td>
                         <td class="product-cell cell-price"><span class="old-price">${a.listino ? '€ ' + a.listino : ''}</span></td>
                         <td class="product-cell cell-discount">${a.sconto ? `<span class="badge-discount">${a.sconto}</span>` : ''}</td>
                         <td class="product-cell cell-final">€ ${a.scontato}</td>
+                        <td class="product-cell cell-final">€ ${formatEuro(subtotale)}</td>
                     </tr>
-                    `).join('')}
+                    `}).join('')}
                 </tbody>
             </table>
         </div>`;
@@ -338,6 +363,7 @@ function generaHtmlDinamico(dati, logoBase64) {
             .product-img { max-width: 90px; max-height: 90px; object-fit: contain; border-radius: 4px; display: inline-block; }
             .cell-price { text-align: right; }
             .cell-discount { text-align: center; }
+            .cell-qty { text-align: center; font-weight: bold; color: #555; }
             .cell-final { text-align: right; font-weight: bold; color: #2e7d32; }
             .old-price { text-decoration: line-through; color: #a0a0a0; }
             .badge-discount { background-color: #ffebee; color: #c62828; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 9pt; }
@@ -370,10 +396,11 @@ function generaHtmlDinamico(dati, logoBase64) {
         ${htmlSezioni}
         ${dati.mostra_totale ? (() => {
             const totale = dati.articoli.reduce((sum, a) => {
-                const val = parseFloat((a.scontato || '0').replace(/\./g, '').replace(',', '.')) || 0;
-                return sum + val;
+                const qty = parseFloat(a.quantita) || 1;
+                const val = parseEuro(a.scontato);
+                return sum + (qty * val);
             }, 0);
-            const totaleStr = totale.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            const totaleStr = formatEuro(totale);
             return `<div class="total-box"><span class="total-label">Totale:</span> <span class="total-value">€ ${totaleStr}</span></div>`;
         })() : ''}
         <div class="notes-card">
